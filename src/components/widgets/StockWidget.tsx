@@ -1,43 +1,26 @@
-import { useState, useEffect } from 'react';
-import { X, TrendingUp, TrendingDown, Settings } from 'lucide-react';
-import { StockData } from '@/types/widget';
+import { useState } from 'react';
+import { X, TrendingUp, TrendingDown, Settings, Loader2 } from 'lucide-react';
+import { useLiveStocks } from '@/hooks/useLiveStocks';
 
 interface StockWidgetProps {
   onRemove: () => void;
   symbols?: string[];
 }
 
-const generateMockStockData = (symbol: string): StockData => {
-  const basePrice = Math.random() * 500 + 50;
-  const change = (Math.random() - 0.5) * 20;
-  return {
-    symbol,
-    price: parseFloat(basePrice.toFixed(2)),
-    change: parseFloat(change.toFixed(2)),
-    changePercent: parseFloat(((change / basePrice) * 100).toFixed(2)),
-  };
-};
-
 export const StockWidget = ({ onRemove, symbols = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA', 'META'] }: StockWidgetProps) => {
-  const [stocks, setStocks] = useState<StockData[]>([]);
   const [editMode, setEditMode] = useState(false);
   const [customSymbols, setCustomSymbols] = useState(symbols.join(', '));
-
-  useEffect(() => {
-    const updateStocks = () => {
-      const activeSymbols = customSymbols.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
-      setStocks(activeSymbols.map(generateMockStockData));
-    };
-    
-    updateStocks();
-    const interval = setInterval(updateStocks, 3000);
-    return () => clearInterval(interval);
-  }, [customSymbols]);
+  
+  const activeSymbols = customSymbols.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+  const { stocks, loading, error } = useLiveStocks(activeSymbols);
 
   return (
     <div className="widget h-full">
       <div className="widget-header">
-        <span className="widget-title">Stocks</span>
+        <span className="widget-title flex items-center gap-2">
+          Stocks
+          {loading && <Loader2 size={12} className="animate-spin text-muted-foreground" />}
+        </span>
         <div className="flex gap-2">
           <button onClick={() => setEditMode(!editMode)} className="text-muted-foreground hover:text-primary transition-colors">
             <Settings size={16} />
@@ -59,6 +42,11 @@ export const StockWidget = ({ onRemove, symbols = ['AAPL', 'GOOGL', 'MSFT', 'AMZ
             />
           </div>
         )}
+        {error && (
+          <div className="text-xs text-destructive p-2 bg-destructive/10 rounded mb-2">
+            {error}
+          </div>
+        )}
         <div className="space-y-2">
           {stocks.map((stock) => (
             <div key={stock.symbol} className="flex items-center justify-between p-3 bg-secondary/50 rounded border border-border/50 hover:border-primary/30 transition-colors">
@@ -78,6 +66,11 @@ export const StockWidget = ({ onRemove, symbols = ['AAPL', 'GOOGL', 'MSFT', 'AMZ
               </div>
             </div>
           ))}
+          {loading && stocks.length === 0 && (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="animate-spin text-primary" size={24} />
+            </div>
+          )}
         </div>
       </div>
     </div>

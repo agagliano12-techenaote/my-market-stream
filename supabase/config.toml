@@ -1,1 +1,10 @@
 project_id = "vugxzhceeopjgyhwfatg"
+
+[functions.stocks]
+verify_jwt = false
+
+[functions.sports]
+verify_jwt = false
+
+[functions.news]
+verify_jwt = false
