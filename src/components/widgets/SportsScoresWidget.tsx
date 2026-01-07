@@ -1,22 +1,14 @@
 import { useState } from 'react';
-import { X, Settings } from 'lucide-react';
-import { SportsScore } from '@/types/widget';
+import { X, Loader2 } from 'lucide-react';
+import { useLiveSports } from '@/hooks/useLiveSports';
 
 interface SportsScoresWidgetProps {
   onRemove: () => void;
 }
 
-const mockScores: SportsScore[] = [
-  { id: '1', league: 'NBA', homeTeam: 'Lakers', awayTeam: 'Celtics', homeScore: 112, awayScore: 108, status: 'Final' },
-  { id: '2', league: 'NFL', homeTeam: 'Chiefs', awayTeam: 'Bills', homeScore: 27, awayScore: 24, status: 'Q4 2:34' },
-  { id: '3', league: 'NHL', homeTeam: 'Rangers', awayTeam: 'Bruins', homeScore: 3, awayScore: 2, status: 'P3 8:15' },
-  { id: '4', league: 'MLB', homeTeam: 'Yankees', awayTeam: 'Red Sox', homeScore: 5, awayScore: 4, status: '9th' },
-  { id: '5', league: 'EPL', homeTeam: 'Arsenal', awayTeam: 'Chelsea', homeScore: 2, awayScore: 1, status: "90'+2" },
-];
-
 export const SportsScoresWidget = ({ onRemove }: SportsScoresWidgetProps) => {
-  const [scores] = useState<SportsScore[]>(mockScores);
   const [selectedLeague, setSelectedLeague] = useState<string>('All');
+  const { scores, loading, error } = useLiveSports(selectedLeague);
 
   const leagues = ['All', 'NBA', 'NFL', 'NHL', 'MLB', 'EPL'];
   const filteredScores = selectedLeague === 'All' ? scores : scores.filter(s => s.league === selectedLeague);
@@ -24,7 +16,10 @@ export const SportsScoresWidget = ({ onRemove }: SportsScoresWidgetProps) => {
   return (
     <div className="widget h-full">
       <div className="widget-header">
-        <span className="widget-title">Sports Scores</span>
+        <span className="widget-title flex items-center gap-2">
+          Sports Scores
+          {loading && <Loader2 size={12} className="animate-spin text-muted-foreground" />}
+        </span>
         <button onClick={onRemove} className="text-muted-foreground hover:text-destructive transition-colors">
           <X size={16} />
         </button>
@@ -45,26 +40,41 @@ export const SportsScoresWidget = ({ onRemove }: SportsScoresWidgetProps) => {
             </button>
           ))}
         </div>
+        {error && (
+          <div className="text-xs text-destructive p-2 bg-destructive/10 rounded mb-2">
+            {error}
+          </div>
+        )}
         <div className="flex-1 overflow-auto scrollbar-thin space-y-2">
-          {filteredScores.map((game) => (
-            <div key={game.id} className="p-3 bg-secondary/30 rounded border border-border/50 hover:border-primary/30 transition-colors">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-mono text-primary font-semibold">{game.league}</span>
-                <span className={`text-xs font-mono ${game.status === 'Final' ? 'text-muted-foreground' : 'text-success'}`}>
-                  {game.status}
-                </span>
-              </div>
-              <div className="grid grid-cols-3 gap-2 items-center">
-                <div className="text-sm font-medium text-right">{game.awayTeam}</div>
-                <div className="font-mono text-xl font-bold text-center">
-                  <span className={game.awayScore > game.homeScore ? 'text-success' : ''}>{game.awayScore}</span>
-                  <span className="text-muted-foreground mx-2">-</span>
-                  <span className={game.homeScore > game.awayScore ? 'text-success' : ''}>{game.homeScore}</span>
-                </div>
-                <div className="text-sm font-medium">{game.homeTeam}</div>
-              </div>
+          {loading && filteredScores.length === 0 ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="animate-spin text-primary" size={24} />
             </div>
-          ))}
+          ) : filteredScores.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No games found for {selectedLeague}
+            </div>
+          ) : (
+            filteredScores.map((game) => (
+              <div key={game.id} className="p-3 bg-secondary/30 rounded border border-border/50 hover:border-primary/30 transition-colors">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-mono text-primary font-semibold">{game.league}</span>
+                  <span className={`text-xs font-mono ${game.status === 'Final' ? 'text-muted-foreground' : 'text-success'}`}>
+                    {game.status}
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 items-center">
+                  <div className="text-sm font-medium text-right">{game.awayTeam}</div>
+                  <div className="font-mono text-xl font-bold text-center">
+                    <span className={game.awayScore > game.homeScore ? 'text-success' : ''}>{game.awayScore}</span>
+                    <span className="text-muted-foreground mx-2">-</span>
+                    <span className={game.homeScore > game.awayScore ? 'text-success' : ''}>{game.homeScore}</span>
+                  </div>
+                  <div className="text-sm font-medium">{game.homeTeam}</div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

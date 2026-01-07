@@ -9,6 +9,7 @@ import { SportsTickerWidget } from './widgets/SportsTickerWidget';
 import { NotesWidget } from './widgets/NotesWidget';
 import { AddWidgetButton } from './AddWidgetButton';
 import { LayoutGrid, Tv } from 'lucide-react';
+import { useLiveStocks } from '@/hooks/useLiveStocks';
 
 const defaultWidgets: Widget[] = [
   { id: '1', type: 'clock', title: 'Clock' },
@@ -22,6 +23,8 @@ export const Dashboard = () => {
     const saved = localStorage.getItem('dashboard-widgets');
     return saved ? JSON.parse(saved) : defaultWidgets;
   });
+  
+  const { stocks } = useLiveStocks(['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA', 'META']);
 
   useEffect(() => {
     localStorage.setItem('dashboard-widgets', JSON.stringify(widgets));
@@ -71,6 +74,13 @@ export const Dashboard = () => {
     return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
   };
 
+  // Generate ticker content from live stocks
+  const tickerContent = stocks.length > 0 
+    ? stocks.map(stock => (
+        `<span class="text-primary">${stock.symbol}</span> $${stock.price.toFixed(2)} <span class="${stock.change >= 0 ? 'text-success' : 'text-destructive'}">${stock.change >= 0 ? '+' : ''}${stock.changePercent}%</span>`
+      )).join(' • ')
+    : 'Loading stock data...';
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -96,7 +106,7 @@ export const Dashboard = () => {
       </header>
 
       {/* Dashboard Grid */}
-      <main className="container py-6">
+      <main className="container py-6 pb-16">
         {widgets.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-[60vh] text-center">
             <div className="p-6 rounded-xl bg-card border border-border mb-6">
@@ -120,18 +130,12 @@ export const Dashboard = () => {
       {/* Footer Ticker */}
       <footer className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border py-2 z-20">
         <div className="overflow-hidden">
-          <div className="animate-ticker whitespace-nowrap font-mono text-xs text-muted-foreground">
-            <span className="text-primary">AAPL</span> $185.32 <span className="text-success">+1.2%</span> • 
-            <span className="text-primary ml-4">GOOGL</span> $141.80 <span className="text-success">+0.8%</span> • 
-            <span className="text-primary ml-4">MSFT</span> $378.91 <span className="text-destructive">-0.3%</span> • 
-            <span className="text-primary ml-4">AMZN</span> $178.25 <span className="text-success">+2.1%</span> • 
-            <span className="text-primary ml-4">TSLA</span> $248.50 <span className="text-destructive">-1.5%</span> • 
-            <span className="text-primary ml-4">META</span> $505.95 <span className="text-success">+0.5%</span> • 
-            <span className="ml-8 text-primary">AAPL</span> $185.32 <span className="text-success">+1.2%</span> • 
-            <span className="text-primary ml-4">GOOGL</span> $141.80 <span className="text-success">+0.8%</span> • 
-            <span className="text-primary ml-4">MSFT</span> $378.91 <span className="text-destructive">-0.3%</span> • 
-            <span className="text-primary ml-4">AMZN</span> $178.25 <span className="text-success">+2.1%</span>
-          </div>
+          <div 
+            className="animate-ticker whitespace-nowrap font-mono text-xs text-muted-foreground"
+            dangerouslySetInnerHTML={{ 
+              __html: tickerContent + ' • ' + tickerContent 
+            }}
+          />
         </div>
       </footer>
     </div>
