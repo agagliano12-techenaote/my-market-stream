@@ -25,21 +25,23 @@ serve(async (req) => {
       );
       const data = await response.json();
       
-      if (data.c === 0 && data.pc === 0) {
+      const price = data.c;
+      const previousClose = data.pc;
+
+      // Skip if no valid data
+      if (price === undefined || price === null || previousClose === undefined || previousClose === null) {
         console.log(`No data for symbol ${symbol}`);
         return null;
       }
 
-      const price = data.c; // Current price
-      const previousClose = data.pc; // Previous close
       const change = price - previousClose;
       const changePercent = previousClose > 0 ? (change / previousClose) * 100 : 0;
 
       return {
         symbol,
-        price: parseFloat(price.toFixed(2)),
-        change: parseFloat(change.toFixed(2)),
-        changePercent: parseFloat(changePercent.toFixed(2)),
+        price: Number(price.toFixed(2)),
+        change: Number(change.toFixed(2)),
+        changePercent: Number(changePercent.toFixed(2)),
       };
     });
 
