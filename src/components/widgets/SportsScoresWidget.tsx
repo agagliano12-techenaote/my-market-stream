@@ -157,9 +157,9 @@ export const SportsScoresWidget = ({ onRemove }: SportsScoresWidgetProps) => {
               No games found for {selectedLeague}
             </div>
           ) : (
-            filteredScores.map((game) => (
+            filteredScores.map((game, index) => (
               <div 
-                key={game.id} 
+                key={`${game.league}-${game.id}-${index}`} 
                 className={`p-3 bg-secondary/30 rounded border transition-colors ${
                   isGameFavorite(game) 
                     ? 'border-warning/50 bg-warning/5' 
