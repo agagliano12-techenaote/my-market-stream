@@ -25,12 +25,12 @@ serve(async (req) => {
       );
       const data = await response.json();
       
-      const price = data.c;
-      const previousClose = data.pc;
+      const price = typeof data.c === 'number' ? data.c : null;
+      const previousClose = typeof data.pc === 'number' ? data.pc : null;
 
       // Skip if no valid data
-      if (price === undefined || price === null || previousClose === undefined || previousClose === null) {
-        console.log(`No data for symbol ${symbol}`);
+      if (price === null || previousClose === null) {
+        console.log(`No data for symbol ${symbol}:`, data);
         return null;
       }
 
@@ -39,9 +39,9 @@ serve(async (req) => {
 
       return {
         symbol,
-        price: Number(price.toFixed(2)),
-        change: Number(change.toFixed(2)),
-        changePercent: Number(changePercent.toFixed(2)),
+        price: Math.round(price * 100) / 100,
+        change: Math.round(change * 100) / 100,
+        changePercent: Math.round(changePercent * 100) / 100,
       };
     });
 
