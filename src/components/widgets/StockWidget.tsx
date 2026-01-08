@@ -1,18 +1,38 @@
-import { useState } from 'react';
-import { X, TrendingUp, TrendingDown, Settings, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, TrendingUp, TrendingDown, Settings, Loader2, Save, Plus, Trash2 } from 'lucide-react';
 import { useLiveStocks } from '@/hooks/useLiveStocks';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 interface StockWidgetProps {
   onRemove: () => void;
-  symbols?: string[];
 }
 
-export const StockWidget = ({ onRemove, symbols = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA', 'META'] }: StockWidgetProps) => {
+const defaultSymbols = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA', 'META'];
+
+export const StockWidget = ({ onRemove }: StockWidgetProps) => {
+  const [savedSymbols, setSavedSymbols] = useLocalStorage<string[]>('dashboard-stock-symbols', defaultSymbols);
   const [editMode, setEditMode] = useState(false);
-  const [customSymbols, setCustomSymbols] = useState(symbols.join(', '));
+  const [inputValue, setInputValue] = useState('');
   
-  const activeSymbols = customSymbols.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
-  const { stocks, loading, error } = useLiveStocks(activeSymbols);
+  const { stocks, loading, error } = useLiveStocks(savedSymbols);
+
+  const addSymbol = () => {
+    const symbol = inputValue.trim().toUpperCase();
+    if (symbol && !savedSymbols.includes(symbol)) {
+      setSavedSymbols([...savedSymbols, symbol]);
+      setInputValue('');
+    }
+  };
+
+  const removeSymbol = (symbol: string) => {
+    setSavedSymbols(savedSymbols.filter(s => s !== symbol));
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      addSymbol();
+    }
+  };
 
   return (
     <div className="widget h-full">
@@ -22,7 +42,7 @@ export const StockWidget = ({ onRemove, symbols = ['AAPL', 'GOOGL', 'MSFT', 'AMZ
           {loading && <Loader2 size={12} className="animate-spin text-muted-foreground" />}
         </span>
         <div className="flex gap-2">
-          <button onClick={() => setEditMode(!editMode)} className="text-muted-foreground hover:text-primary transition-colors">
+          <button onClick={() => setEditMode(!editMode)} className={`transition-colors ${editMode ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}>
             <Settings size={16} />
           </button>
           <button onClick={onRemove} className="text-muted-foreground hover:text-destructive transition-colors">
@@ -32,14 +52,35 @@ export const StockWidget = ({ onRemove, symbols = ['AAPL', 'GOOGL', 'MSFT', 'AMZ
       </div>
       <div className="widget-content h-[calc(100%-52px)] overflow-auto scrollbar-thin">
         {editMode && (
-          <div className="mb-4">
-            <input
-              type="text"
-              value={customSymbols}
-              onChange={(e) => setCustomSymbols(e.target.value)}
-              className="w-full bg-secondary border border-border rounded px-3 py-2 text-sm font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-              placeholder="AAPL, GOOGL, MSFT..."
-            />
+          <div className="mb-4 p-3 bg-secondary/50 rounded border border-border">
+            <p className="text-xs text-muted-foreground mb-2 font-mono">Manage your stocks:</p>
+            <div className="flex gap-2 mb-3">
+              <input
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value.toUpperCase())}
+                onKeyDown={handleKeyDown}
+                placeholder="Add symbol..."
+                className="flex-1 bg-background border border-border rounded px-3 py-1.5 text-sm font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                maxLength={10}
+              />
+              <button
+                onClick={addSymbol}
+                className="px-3 py-1.5 bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors"
+              >
+                <Plus size={14} />
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {savedSymbols.map(symbol => (
+                <span key={symbol} className="flex items-center gap-1 px-2 py-1 bg-background border border-border rounded text-xs font-mono">
+                  {symbol}
+                  <button onClick={() => removeSymbol(symbol)} className="text-muted-foreground hover:text-destructive">
+                    <X size={12} />
+                  </button>
+                </span>
+              ))}
+            </div>
           </div>
         )}
         {error && (

@@ -5,7 +5,8 @@ export type WidgetType =
   | 'sports-scores'
   | 'sports-ticker'
   | 'clock'
-  | 'notes';
+  | 'notes'
+  | 'tasks';
 
 export interface Widget {
   id: string;
