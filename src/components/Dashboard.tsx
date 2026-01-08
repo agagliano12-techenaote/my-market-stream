@@ -7,9 +7,11 @@ import { InstagramWidget } from './widgets/InstagramWidget';
 import { SportsScoresWidget } from './widgets/SportsScoresWidget';
 import { SportsTickerWidget } from './widgets/SportsTickerWidget';
 import { NotesWidget } from './widgets/NotesWidget';
+import { TasksWidget } from './widgets/TasksWidget';
 import { AddWidgetButton } from './AddWidgetButton';
 import { LayoutGrid, Tv } from 'lucide-react';
 import { useLiveStocks } from '@/hooks/useLiveStocks';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 const defaultWidgets: Widget[] = [
   { id: '1', type: 'clock', title: 'Clock' },
@@ -19,16 +21,10 @@ const defaultWidgets: Widget[] = [
 ];
 
 export const Dashboard = () => {
-  const [widgets, setWidgets] = useState<Widget[]>(() => {
-    const saved = localStorage.getItem('dashboard-widgets');
-    return saved ? JSON.parse(saved) : defaultWidgets;
-  });
+  const [widgets, setWidgets] = useLocalStorage<Widget[]>('dashboard-widgets', defaultWidgets);
+  const [stockSymbols] = useLocalStorage<string[]>('dashboard-stock-symbols', ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA', 'META']);
   
-  const { stocks } = useLiveStocks(['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA', 'META']);
-
-  useEffect(() => {
-    localStorage.setItem('dashboard-widgets', JSON.stringify(widgets));
-  }, [widgets]);
+  const { stocks } = useLiveStocks(stockSymbols);
 
   const addWidget = (type: WidgetType) => {
     const newWidget: Widget = {
@@ -61,6 +57,8 @@ export const Dashboard = () => {
         return <SportsTickerWidget {...props} />;
       case 'notes':
         return <NotesWidget {...props} />;
+      case 'tasks':
+        return <TasksWidget {...props} />;
       default:
         return null;
     }

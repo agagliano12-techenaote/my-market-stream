@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, X, Clock, TrendingUp, Newspaper, Camera, Trophy, Radio, StickyNote } from 'lucide-react';
+import { Plus, X, Clock, TrendingUp, Newspaper, Camera, Trophy, Radio, StickyNote, CheckSquare } from 'lucide-react';
 import { WidgetType } from '@/types/widget';
 
 interface AddWidgetButtonProps {
@@ -14,6 +14,7 @@ const widgetOptions: { type: WidgetType; label: string; icon: React.ReactNode; d
   { type: 'sports-scores', label: 'Sports Scores', icon: <Trophy size={20} />, description: 'Live game scores' },
   { type: 'sports-ticker', label: 'Sports Ticker', icon: <Radio size={20} />, description: 'Sports headlines' },
   { type: 'notes', label: 'Notes', icon: <StickyNote size={20} />, description: 'Quick notes' },
+  { type: 'tasks', label: 'Tasks', icon: <CheckSquare size={20} />, description: 'Todo list' },
 ];
 
 export const AddWidgetButton = ({ onAddWidget }: AddWidgetButtonProps) => {
